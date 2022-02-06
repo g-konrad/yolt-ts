@@ -3,6 +3,9 @@ import { ReaderTaskEither } from 'fp-ts/lib/ReaderTaskEither'
 
 type YoltErr = string
 
+export type YoltArg = {
+  readonly name: string
+}
 export type YoltFlag = {
   readonly name: string
   readonly alias: Option<string>
@@ -19,6 +22,5 @@ export type YoltCommand = {
   readonly subcommands: readonly YoltCommand[]
 }
 
-export type YoltCommandTransformer = (s: YoltCommand) => YoltCommand
-
+export type Transformer<T> = (s: T) => T
 export type YoltRunner = ReaderTaskEither<YoltCommand, YoltErr, void>

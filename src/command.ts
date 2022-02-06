@@ -1,4 +1,4 @@
-import type { YoltFlag, YoltCommand, YoltCommandTransformer } from './types'
+import type { YoltFlag, YoltCommand, Transformer } from './types'
 
 import { concat as concatArray } from 'fp-ts/lib/ReadonlyArray'
 import { none, some } from 'fp-ts/lib/Option'
@@ -23,7 +23,7 @@ const commandSemigroup: Semigroup<YoltCommand> =
 
 const mergeCommand = concatAll (commandSemigroup)
 
-const createCommand = (name: string) => (...ts: readonly YoltCommandTransformer[]): YoltCommand => {
+const createCommand = (name: string) => (...ts: ReadonlyArray<Transformer<YoltCommand>>): YoltCommand => {
   const initialSetting = {
     name,
     version: none,
@@ -33,7 +33,7 @@ const createCommand = (name: string) => (...ts: readonly YoltCommandTransformer[
     subcommands: [],
   }
 
-  return mergeCommand (initialSetting) (ts.map ((t) => t (initialSetting)))
+  return mergeCommand (initialSetting) (ts.map ((t): YoltCommand => t (initialSetting)))
 }
 
 const version = (version: string) => (command: YoltCommand): YoltCommand =>
@@ -60,11 +60,18 @@ const subcommand = (subcommand: YoltCommand) => (command: YoltCommand): YoltComm
     subcommands: [subcommand],
   })
 
+const flag = (flag: YoltFlag) => (command: YoltCommand): YoltCommand =>
+  ({
+    ...command,
+    flags: [flag],
+  })
+
 export {
+  commandSemigroup,
   createCommand,
   version,
   about,
   example,
   subcommand,
-  commandSemigroup,
+  flag,
 }

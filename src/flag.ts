@@ -1,4 +1,4 @@
-import type { YoltFlag, YoltCommand } from './types'
+import type { YoltFlag, YoltCommand, Transformer } from './types'
 
 import { concatAll, Semigroup } from 'fp-ts/lib/Semigroup'
 import { none, some } from 'fp-ts/lib/Option'
@@ -10,60 +10,48 @@ const concatFlag = (x: YoltFlag, y: YoltFlag): YoltFlag =>
     name: y.name,
     alias: concatStrOption (x.alias, y.alias),
     description: concatStrOption (x.description, y.description),
-    fallback: y.fallback
+    fallback: y.fallback,
   })
 
 const flagSemigroup: Semigroup<YoltFlag> =
   {
-    concat: concatFlag
+    concat: concatFlag,
   }
 
-const intoFlag = concatAll (flagSemigroup)
+const mergeFlags = concatAll (flagSemigroup)
 
-const flag = (name: string) => (opts: readonly YoltFlag[]): YoltCommand =>
-  ({
-    name: none,
-    version: none,
-    about: none,
-    examples: [],
-    flags: [
-      intoFlag ({
-        name: some (name),
-        alias: none,
-        description: none,
-        fallback: none
-      }) (opts)
-    ],
-    subcommands: []
-  })
+const createFlag = (name: string) => (...ts: ReadonlyArray<Transformer<YoltFlag>>): YoltFlag => {
+  const initialFlag = {
+    name: name,
+    alias: none,
+    description: none,
+    fallback: none,
+  }
 
-const alias = (alias: string): YoltFlag =>
+  return mergeFlags (initialFlag) (ts.map ((t): YoltFlag => t (initialFlag)))
+}
+
+const alias = (alias: string) => (flag: YoltFlag): YoltFlag =>
   ({
-    name: none,
+    ...flag,
     alias: some (alias),
-    description: none,
-    fallback: none
   })
 
-const description = (description: string): YoltFlag =>
+const description = (description: string) => (flag: YoltFlag): YoltFlag =>
   ({
-    name: none,
-    alias: none,
+    ...flag,
     description: some (description),
-    fallback: none
   })
 
-const fallback = (value: unknown): YoltFlag =>
+const fallback = (value: unknown) => (flag: YoltFlag): YoltFlag =>
   ({
-    name: none,
-    alias: none,
-    description: none,
-    fallback: some (value)
+    ...flag,
+    fallback: some (value),
   })
 
 export {
-  flag,
+  createFlag,
   alias,
   description,
-  fallback
+  fallback,
 }
