@@ -23,7 +23,8 @@
   "rules": {
     "@typescript-eslint/func-call-spacing": ["error", "always"],
     "@typescript-eslint/consistent-type-definitions": ["error", "type"],
-    "functional/functional-parameters": "off"
+    "functional/functional-parameters": "off",
+    "comma-dangle": ["error", "always-multiline"]
   },
   "overrides": [
     {

@@ -1,4 +1,4 @@
-import type { YoltFlag, YoltSettings } from './types'
+import type { YoltFlag, YoltSettings, YoltSettingsTransformer } from './types'
 
 import { concat as concatArray } from 'fp-ts/lib/ReadonlyArray'
 import { none, some } from 'fp-ts/lib/Option'
@@ -6,73 +6,58 @@ import { concatAll, Semigroup } from 'fp-ts/lib/Semigroup'
 
 import { concatStrOption } from './utils'
 
-const concatSettings = (x: YoltSettings, y: YoltSettings): YoltSettings =>
+const concatSettings = (x: YoltSettings) => (y: YoltSettings): YoltSettings =>
   ({
-    name: concatStrOption (x.name, y.name),
+    name: x.name,
     version: concatStrOption (x.version, y.version),
     about: concatStrOption (x.about, y.about),
     examples: concatArray<string> (x.examples) (y.examples),
     flags: concatArray<YoltFlag> (x.flags) (y.flags),
-    subcommands: concatArray<YoltSettings> (x.subcommands) (y.subcommands)
+    subcommands: concatArray<YoltSettings> (x.subcommands) (y.subcommands),
   })
 
 const settingsSemigroup: Semigroup<YoltSettings> =
   {
-    concat: concatSettings
+    concat: (x, y) => concatSettings (x) (y),
   }
 
-const intoSettings = concatAll (settingsSemigroup)
+const mergeSettings = concatAll (settingsSemigroup)
 
-const createCommand = (name: string): ((sets: readonly YoltSettings[]) => YoltSettings) =>
-  intoSettings ({
-    name: some (name),
+const createCommand = (name: string) => (...ts: readonly YoltSettingsTransformer[]): YoltSettings => {
+  const initialSetting = {
+    name,
     version: none,
     about: none,
     examples: [],
     flags: [],
-    subcommands: []
-  })
+    subcommands: [],
+  }
 
-const version = (version: string): YoltSettings =>
+  return mergeSettings (initialSetting) (ts.map ((t) => t (initialSetting)))
+}
+
+const version = (version: string) => (settings: YoltSettings): YoltSettings =>
   ({
-    name: none,
+    ...settings,
     version: some (version),
-    about: none,
-    examples: [],
-    flags: [],
-    subcommands: []
   })
 
-const about = (about: string): YoltSettings =>
+const about = (about: string) => (settings: YoltSettings): YoltSettings =>
   ({
-    name: none,
-    version: none,
+    ...settings,
     about: some (about),
-    examples: [],
-    flags: [],
-    subcommands: []
   })
 
-const example = (example: string): YoltSettings =>
+const example = (example: string) => (settings: YoltSettings): YoltSettings =>
   ({
-    name: none,
-    version: none,
-    about: none,
+    ...settings,
     examples: [example],
-    flags: [],
-    subcommands: []
   })
 
-const subcommand = (settings: YoltSettings): YoltSettings =>
+const subcommand = (subcommand: YoltSettings) => (settings: YoltSettings): YoltSettings =>
   ({
-    name: none,
-    version: none,
-    about: none,
-    examples: [],
-    flags: [],
-    subcommands: [
-      settings
-    ]
+    ...settings,
+    subcommands: [subcommand],
   })
 
 export {
@@ -80,5 +65,6 @@ export {
   version,
   about,
   example,
-  subcommand
+  subcommand,
+  settingsSemigroup,
 }
