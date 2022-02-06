@@ -1,4 +1,4 @@
-import type { YoltFlag, YoltSettings } from './types'
+import type { YoltFlag, YoltCommand } from './types'
 
 import { concatAll, Semigroup } from 'fp-ts/lib/Semigroup'
 import { none, some } from 'fp-ts/lib/Option'
@@ -20,7 +20,7 @@ const flagSemigroup: Semigroup<YoltFlag> =
 
 const intoFlag = concatAll (flagSemigroup)
 
-const flag = (name: string) => (opts: readonly YoltFlag[]): YoltSettings =>
+const flag = (name: string) => (opts: readonly YoltFlag[]): YoltCommand =>
   ({
     name: none,
     version: none,

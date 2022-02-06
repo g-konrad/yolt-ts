@@ -1,5 +1,5 @@
 import { some } from 'fp-ts/lib/Option'
-import { createCommand, about, example, version, subcommand } from './settings'
+import { createCommand, about, example, version, subcommand } from './command'
 
 const NAME = 'manager'
 const VERSION = '1.0.1'
@@ -8,39 +8,39 @@ const EXAMPLE_ONE = 'manager build'
 const EXAMPLE_TWO = 'manager start'
 
 test ('name', () => {
-  const settings = createCommand (NAME) ()
+  const command = createCommand (NAME) ()
 
-  expect (settings).toHaveProperty ('name')
-  expect (settings.name).toStrictEqual (NAME)
+  expect (command).toHaveProperty ('name')
+  expect (command.name).toStrictEqual (NAME)
 })
 
 test ('version', () => {
-  const settings = createCommand (NAME) (
+  const command = createCommand (NAME) (
     version (VERSION),
   )
 
-  expect (settings).toHaveProperty ('version')
-  expect (settings.version).toStrictEqual (some (VERSION))
+  expect (command).toHaveProperty ('version')
+  expect (command.version).toStrictEqual (some (VERSION))
 })
 
 test ('about', () => {
-  const settings = createCommand (NAME) (
+  const command = createCommand (NAME) (
     about (ABOUT),
   )
 
-  expect (settings).toHaveProperty ('about')
-  expect (settings.about).toStrictEqual (some (ABOUT))
+  expect (command).toHaveProperty ('about')
+  expect (command.about).toStrictEqual (some (ABOUT))
 })
 
 test ('examples', () => {
-  const settings = createCommand (NAME) (
+  const command = createCommand (NAME) (
     example (EXAMPLE_ONE),
     example (EXAMPLE_TWO),
   )
 
-  expect (settings).toHaveProperty ('examples')
-  expect (settings.examples).toContain (EXAMPLE_ONE)
-  expect (settings.examples).toContain (EXAMPLE_TWO)
+  expect (command).toHaveProperty ('examples')
+  expect (command.examples).toContain (EXAMPLE_ONE)
+  expect (command.examples).toContain (EXAMPLE_TWO)
 })
 
 test ('subcommands', () => {
