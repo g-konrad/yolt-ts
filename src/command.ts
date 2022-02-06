@@ -21,6 +21,8 @@ const commandSemigroup: Semigroup<YoltCommand> =
     concat: (x, y) => concatCommand (x) (y),
   }
 
+const { concat } = commandSemigroup
+
 const mergeCommand = concatAll (commandSemigroup)
 
 const createCommand = (name: string) => (...ts: ReadonlyArray<Transformer<YoltCommand>>): YoltCommand => {
@@ -67,8 +69,8 @@ const flag = (flag: YoltFlag) => (command: YoltCommand): YoltCommand =>
   })
 
 export {
-  commandSemigroup,
   createCommand,
+  concat,
   version,
   about,
   example,

@@ -1,11 +1,11 @@
-import type { YoltFlag, YoltCommand, Transformer } from './types'
+import type { YoltFlag, Transformer } from './types'
 
 import { concatAll, Semigroup } from 'fp-ts/lib/Semigroup'
 import { none, some } from 'fp-ts/lib/Option'
 
 import { concatStrOption } from './utils'
 
-const concatFlag = (x: YoltFlag, y: YoltFlag): YoltFlag =>
+const concatFlag = (x: YoltFlag) => (y: YoltFlag): YoltFlag =>
   ({
     name: y.name,
     alias: concatStrOption (x.alias, y.alias),
@@ -15,8 +15,10 @@ const concatFlag = (x: YoltFlag, y: YoltFlag): YoltFlag =>
 
 const flagSemigroup: Semigroup<YoltFlag> =
   {
-    concat: concatFlag,
+    concat: (x, y) => concatFlag (x) (y),
   }
+
+const { concat } = flagSemigroup
 
 const mergeFlags = concatAll (flagSemigroup)
 
@@ -51,6 +53,7 @@ const fallback = (value: unknown) => (flag: YoltFlag): YoltFlag =>
 
 export {
   createFlag,
+  concat,
   alias,
   description,
   fallback,
