@@ -8,7 +8,7 @@ const EXAMPLE_ONE = 'manager build'
 const EXAMPLE_TWO = 'manager start'
 
 test ('name', () => {
-  const settings = createCommand (NAME)
+  const settings = createCommand (NAME) ()
 
   expect (settings).toHaveProperty ('name')
   expect (settings.name).toStrictEqual (NAME)
