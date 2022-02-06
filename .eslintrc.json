@@ -22,14 +22,14 @@
   ],
   "rules": {
     "@typescript-eslint/func-call-spacing": ["error", "always"],
-    "@typescript-eslint/consistent-type-definitions": ["error", "type"]
+    "@typescript-eslint/consistent-type-definitions": ["error", "type"],
+    "functional/functional-parameters": "off"
   },
   "overrides": [
     {
       "files": "*.spec*.ts",
       "rules": {
         "functional/no-expression-statement": "off",
-        "functional/functional-parameters": "off",
         "functional/no-return-void": "off"
       }
     }
