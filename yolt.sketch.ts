@@ -2,6 +2,7 @@ import { command, describe, codec, version, subcommand, arg, action, flag, alias
 import { runYolt } from 'yolt'
 import * as t from 'io-ts'
 
+// explicitly it should be something like this, but...
 const build = command ('build') (
   arg ('src') (
     codec (t.string),
@@ -17,7 +18,7 @@ const build = command ('build') (
   )
 )
 
-// automatically infer the proper codecs
+// ideally we would automatically infer the proper codecs
 // maybe we'll need a `provideCodec` function for custom codecs?
 const altBuild = command ('build <src:string> <dest:string>') (
   describe ('Builds the source directory'),
