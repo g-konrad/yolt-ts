@@ -13,15 +13,15 @@ export type YoltFlag = {
   readonly fallback: Option<unknown>
 }
 
-export type YoltCommand = {
+export type YoltOpts = {
   readonly name: string
   readonly version: Option<string>
   readonly about: Option<string>
   readonly args: readonly string[]
   readonly examples: readonly string[]
   readonly flags: readonly YoltFlag[]
-  readonly subcommands: readonly YoltCommand[]
+  readonly subcommands: readonly YoltOpts[]
 }
 
 export type Transformer<T> = (s: T) => T
-export type YoltRunner = ReaderTaskEither<YoltCommand, YoltErr, void>
+export type YoltRunner = ReaderTaskEither<YoltOpts, YoltErr, void>

@@ -1,4 +1,4 @@
-import type { YoltFlag, YoltCommand } from './types'
+import type { YoltFlag, YoltOpts } from './types'
 
 import * as t from 'io-ts'
 import { option } from 'io-ts-types'
@@ -10,7 +10,7 @@ const yoltFlag: t.Type<YoltFlag> = t.type ({
   fallback: option (t.unknown)
 })
 
-const yoltCommand: t.Type<YoltCommand> = t.recursion ('YoltCommand', () =>
+const yoltCommand: t.Type<YoltOpts> = t.recursion ('YoltOpts', () =>
   t.type ({
     name: t.string,
     version: option (t.string),
