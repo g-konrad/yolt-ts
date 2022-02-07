@@ -6,17 +6,18 @@ type YoltErr = string
 export type YoltArg = {
   readonly name: string
 }
-export type YoltFlag = {
+
+export type YoltBase = {
   readonly name: string
-  readonly alias: Option<string>
   readonly description: Option<string>
+}
+export type YoltFlag = YoltBase & {
+  readonly alias: Option<string>
   readonly fallback: Option<unknown>
 }
 
-export type YoltOpts = {
-  readonly name: string
+export type YoltOpts = YoltBase & {
   readonly version: Option<string>
-  readonly about: Option<string>
   readonly args: readonly string[]
   readonly examples: readonly string[]
   readonly flags: readonly YoltFlag[]

@@ -1,5 +1,6 @@
 import { some } from 'fp-ts/lib/Option'
-import { alias, createFlag, description, fallback } from './flag'
+import { alias, createFlag, fallback } from './flag'
+import { describe } from './opts'
 
 const NAME = 'output'
 const ALIAS = 'o'
@@ -22,9 +23,9 @@ test ('alias', () => {
   expect (flag.alias).toStrictEqual (some (ALIAS))
 })
 
-test ('description', () => {
+test ('describe', () => {
   const flag = createFlag (NAME) (
-    description (DESCRIPTION),
+    describe (DESCRIPTION),
   )
 
   expect (flag).toHaveProperty ('description')
@@ -43,10 +44,10 @@ test ('fallback', () => {
 test ('concat', () => {
   const flag = createFlag (NAME) (
     alias (ALIAS),
-    description (DESCRIPTION),
+    describe (DESCRIPTION),
     fallback (FALLBACK),
     alias ('ot'),
-    description ('another description'),
+    describe ('another description'),
     fallback ('index.js'),
   )
 

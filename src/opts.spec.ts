@@ -1,5 +1,5 @@
 import { some } from 'fp-ts/lib/Option'
-import { command, about, example, version, subcommand, arg } from './opts'
+import { command, describe, example, version, subcommand, arg } from './opts'
 
 const NAME = 'manager'
 const VERSION = '1.0.1'
@@ -25,13 +25,13 @@ test ('version', () => {
   expect (opts.version).toStrictEqual (some (VERSION))
 })
 
-test ('about', () => {
+test ('describe', () => {
   const opts = command (NAME) (
-    about (ABOUT),
+    describe (ABOUT),
   )
 
-  expect (opts).toHaveProperty ('about')
-  expect (opts.about).toStrictEqual (some (ABOUT))
+  expect (opts).toHaveProperty ('description')
+  expect (opts.description).toStrictEqual (some (ABOUT))
 })
 
 test ('examples', () => {
@@ -65,17 +65,17 @@ test ('subcommands', () => {
 
   const suboptsOne = command (SUBCOMMAND_ONE_NAME) (
     version (SUBCOMMAND_ONE_VERSION),
-    about (SUBCOMMAND_ONE_ABOUT),
+    describe (SUBCOMMAND_ONE_ABOUT),
     example (SUBCOMMAND_ONE_EXAMPLE_ONE),
     example (SUBCOMMAND_ONE_EXAMPLE_TWO),
   )
   expect (suboptsOne).toHaveProperty ('name')
   expect (suboptsOne).toHaveProperty ('version')
-  expect (suboptsOne).toHaveProperty ('about')
+  expect (suboptsOne).toHaveProperty ('description')
   expect (suboptsOne).toHaveProperty ('examples')
   expect (suboptsOne.name).toStrictEqual (SUBCOMMAND_ONE_NAME)
   expect (suboptsOne.version).toStrictEqual (some (SUBCOMMAND_ONE_VERSION))
-  expect (suboptsOne.about).toStrictEqual (some (SUBCOMMAND_ONE_ABOUT))
+  expect (suboptsOne.description).toStrictEqual (some (SUBCOMMAND_ONE_ABOUT))
   expect (suboptsOne.examples).toContain (SUBCOMMAND_ONE_EXAMPLE_ONE)
   expect (suboptsOne.examples).toContain (SUBCOMMAND_ONE_EXAMPLE_TWO)
 
@@ -86,23 +86,23 @@ test ('subcommands', () => {
   const SUBCOMMAND_TWO_EXAMPLE_TWO = 'subcommandTwo run'
   const suboptsTwo = command (SUBCOMMAND_TWO_NAME) (
     version (SUBCOMMAND_TWO_VERSION),
-    about (SUBCOMMAND_TWO_ABOUT),
+    describe (SUBCOMMAND_TWO_ABOUT),
     example (SUBCOMMAND_TWO_EXAMPLE_ONE),
     example (SUBCOMMAND_TWO_EXAMPLE_TWO),
   )
   expect (suboptsTwo).toHaveProperty ('name')
   expect (suboptsTwo).toHaveProperty ('version')
-  expect (suboptsTwo).toHaveProperty ('about')
+  expect (suboptsTwo).toHaveProperty ('description')
   expect (suboptsTwo).toHaveProperty ('examples')
   expect (suboptsTwo.name).toStrictEqual (SUBCOMMAND_TWO_NAME)
   expect (suboptsTwo.version).toStrictEqual (some (SUBCOMMAND_TWO_VERSION))
-  expect (suboptsTwo.about).toStrictEqual (some (SUBCOMMAND_TWO_ABOUT))
+  expect (suboptsTwo.description).toStrictEqual (some (SUBCOMMAND_TWO_ABOUT))
   expect (suboptsTwo.examples).toContain (SUBCOMMAND_TWO_EXAMPLE_ONE)
   expect (suboptsTwo.examples).toContain (SUBCOMMAND_TWO_EXAMPLE_TWO)
 
   const opts = command (NAME) (
     version (VERSION),
-    about (ABOUT),
+    describe (ABOUT),
     example (EXAMPLE_ONE),
     example (EXAMPLE_TWO),
     subcommand (suboptsOne),
@@ -111,10 +111,10 @@ test ('subcommands', () => {
   expect (opts).toHaveProperty ('examples')
   expect (opts).toHaveProperty ('name')
   expect (opts).toHaveProperty ('version')
-  expect (opts).toHaveProperty ('about')
+  expect (opts).toHaveProperty ('description')
   expect (opts.name).toStrictEqual (NAME)
   expect (opts.version).toStrictEqual (some (VERSION))
-  expect (opts.about).toStrictEqual (some (ABOUT))
+  expect (opts.description).toStrictEqual (some (ABOUT))
   expect (opts.examples).toContain (EXAMPLE_ONE)
   expect (opts.examples).toContain (EXAMPLE_TWO)
   expect (opts.subcommands).toContain (suboptsOne)
@@ -125,17 +125,17 @@ test ('concat', () => {
   const opts = command (NAME) (
     version (VERSION),
     version ('0.1.4'),
-    about (ABOUT),
-    about ('another about'),
+    describe (ABOUT),
+    describe ('another describe'),
     example (EXAMPLE_ONE),
     example (EXAMPLE_TWO),
   )
 
   expect (opts).toHaveProperty ('version')
-  expect (opts).toHaveProperty ('about')
+  expect (opts).toHaveProperty ('description')
   expect (opts).toHaveProperty ('examples')
   expect (opts.version).toStrictEqual (some ('0.1.4'))
-  expect (opts.about).toStrictEqual (some ('another about'))
+  expect (opts.description).toStrictEqual (some ('another describe'))
   expect (opts.examples).toContain (EXAMPLE_ONE)
   expect (opts.examples).toContain (EXAMPLE_TWO)
 })

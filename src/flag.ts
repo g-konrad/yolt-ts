@@ -39,12 +39,6 @@ const alias = (alias: string) => (flag: YoltFlag): YoltFlag =>
     alias: some (alias),
   })
 
-const description = (description: string) => (flag: YoltFlag): YoltFlag =>
-  ({
-    ...flag,
-    description: some (description),
-  })
-
 const fallback = (value: unknown) => (flag: YoltFlag): YoltFlag =>
   ({
     ...flag,
@@ -55,6 +49,5 @@ export {
   createFlag,
   concat,
   alias,
-  description,
   fallback,
 }

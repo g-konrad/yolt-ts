@@ -1,17 +1,17 @@
-import type { YoltFlag, YoltOpts, Transformer } from './types'
+import type { YoltFlag, YoltOpts, YoltBase, Transformer } from './types'
 
 import { concat as concatArray } from 'fp-ts/lib/ReadonlyArray'
 import { none, some } from 'fp-ts/lib/Option'
 import { concatAll, Semigroup } from 'fp-ts/lib/Semigroup'
 
 import { concatStrOption } from './utils'
-import { createFlag } from './flag'
+import { createFlag, alias, fallback } from './flag'
 
 const concatOpts = (x: YoltOpts) => (y: YoltOpts): YoltOpts =>
   ({
     name: x.name,
     version: concatStrOption (x.version, y.version),
-    about: concatStrOption (x.about, y.about),
+    description: concatStrOption (x.description, y.description),
     args: concatArray<string> (x.args) (y.args),
     examples: concatArray<string> (x.examples) (y.examples),
     flags: concatArray<YoltFlag> (x.flags) (y.flags),
@@ -31,7 +31,7 @@ const command = (name: string) => (...ts: ReadonlyArray<Transformer<YoltOpts>>):
   const initialOpts = {
     name,
     version: none,
-    about: none,
+    description: none,
     args: [],
     examples: [],
     flags: [],
@@ -47,10 +47,10 @@ const version = (v: string) => (opts: YoltOpts): YoltOpts =>
     version: some (v),
   })
 
-const about = (abt: string) => (opts: YoltOpts): YoltOpts =>
+const describe = (desc: string) => <T extends YoltBase>(opts: T): T =>
   ({
     ...opts,
-    about: some (abt),
+    description: some (desc),
   })
 
 const example = (ex: string) => (opts: YoltOpts): YoltOpts =>
@@ -81,9 +81,11 @@ export {
   command,
   concat,
   version,
-  about,
+  describe,
   example,
   subcommand,
   flag,
+  alias,
+  fallback,
   arg,
 }
