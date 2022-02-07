@@ -5,12 +5,14 @@ import { none, some } from 'fp-ts/lib/Option'
 import { concatAll, Semigroup } from 'fp-ts/lib/Semigroup'
 
 import { concatStrOption } from './utils'
+import { createFlag } from './flag'
 
 const concatCommand = (x: YoltCommand) => (y: YoltCommand): YoltCommand =>
   ({
     name: x.name,
     version: concatStrOption (x.version, y.version),
     about: concatStrOption (x.about, y.about),
+    args: concatArray<string> (x.args) (y.args),
     examples: concatArray<string> (x.examples) (y.examples),
     flags: concatArray<YoltFlag> (x.flags) (y.flags),
     subcommands: concatArray<YoltCommand> (x.subcommands) (y.subcommands),
@@ -25,11 +27,12 @@ const { concat } = commandSemigroup
 
 const mergeCommand = concatAll (commandSemigroup)
 
-const createCommand = (name: string) => (...ts: ReadonlyArray<Transformer<YoltCommand>>): YoltCommand => {
+const command = (name: string) => (...ts: ReadonlyArray<Transformer<YoltCommand>>): YoltCommand => {
   const initialSetting = {
     name,
     version: none,
     about: none,
+    args: [],
     examples: [],
     flags: [],
     subcommands: [],
@@ -38,42 +41,49 @@ const createCommand = (name: string) => (...ts: ReadonlyArray<Transformer<YoltCo
   return mergeCommand (initialSetting) (ts.map ((t): YoltCommand => t (initialSetting)))
 }
 
-const version = (version: string) => (command: YoltCommand): YoltCommand =>
+const version = (v: string) => (cmd: YoltCommand): YoltCommand =>
   ({
-    ...command,
-    version: some (version),
+    ...cmd,
+    version: some (v),
   })
 
-const about = (about: string) => (command: YoltCommand): YoltCommand =>
+const about = (abt: string) => (cmd: YoltCommand): YoltCommand =>
   ({
-    ...command,
-    about: some (about),
+    ...cmd,
+    about: some (abt),
   })
 
-const example = (example: string) => (command: YoltCommand): YoltCommand =>
+const example = (ex: string) => (cmd: YoltCommand): YoltCommand =>
   ({
-    ...command,
-    examples: [example],
+    ...cmd,
+    examples: [ex],
   })
 
-const subcommand = (subcommand: YoltCommand) => (command: YoltCommand): YoltCommand =>
+const subcommand = (subcmd: YoltCommand) => (cmd: YoltCommand): YoltCommand =>
   ({
-    ...command,
-    subcommands: [subcommand],
+    ...cmd,
+    subcommands: [subcmd],
   })
 
-const flag = (flag: YoltFlag) => (command: YoltCommand): YoltCommand =>
+const arg = (a: string) => (cmd: YoltCommand): YoltCommand =>
   ({
-    ...command,
-    flags: [flag],
+    ...cmd,
+    args: [a],
+  })
+
+const flag = (name: string) => (...ts: ReadonlyArray<Transformer<YoltFlag>>) => (cmd: YoltCommand): YoltCommand =>
+  ({
+    ...cmd,
+    flags: [createFlag (name) (...ts)],
   })
 
 export {
-  createCommand,
+  command,
   concat,
   version,
   about,
   example,
   subcommand,
   flag,
+  arg,
 }

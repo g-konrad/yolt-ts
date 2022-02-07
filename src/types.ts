@@ -17,6 +17,7 @@ export type YoltCommand = {
   readonly name: string
   readonly version: Option<string>
   readonly about: Option<string>
+  readonly args: readonly string[]
   readonly examples: readonly string[]
   readonly flags: readonly YoltFlag[]
   readonly subcommands: readonly YoltCommand[]
