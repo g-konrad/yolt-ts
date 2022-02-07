@@ -1,5 +1,5 @@
-import { command, describe, codec, version, subcommand, arg, action, flag, alias, fallback } from 'yolt/command'
-import { runYolt } from 'yolt'
+import { command, describe, codec, version, subcommand, arg, action, flag, alias, fallback } from 'yolt/opts'
+import { run } from 'yolt'
 import * as t from 'io-ts'
 
 // explicitly it should be something like this, but...
@@ -42,4 +42,4 @@ const manager = command ('manager') (
   subcommand (build)
 )
 
-const main = runYolt (manager) (process.argv)
+const main = run (manager) (process.argv)
