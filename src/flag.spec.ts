@@ -1,5 +1,5 @@
 import { some } from 'fp-ts/lib/Option'
-import { alias, createFlag, fallback } from './flag'
+import { alias, createOptsFlag, fallback } from './flag'
 import { describe } from './opts'
 
 const NAME = 'output'
@@ -8,14 +8,14 @@ const DESCRIPTION = 'Sets different output file.'
 const FALLBACK = 'bundle.js'
 
 test ('name', () => {
-  const flag = createFlag (NAME) ()
+  const flag = createOptsFlag (NAME) ()
 
   expect (flag).toHaveProperty ('name')
   expect (flag.name).toStrictEqual (NAME)
 })
 
 test ('alias', () => {
-  const flag = createFlag (NAME) (
+  const flag = createOptsFlag (NAME) (
     alias (ALIAS),
   )
 
@@ -24,7 +24,7 @@ test ('alias', () => {
 })
 
 test ('describe', () => {
-  const flag = createFlag (NAME) (
+  const flag = createOptsFlag (NAME) (
     describe (DESCRIPTION),
   )
 
@@ -33,7 +33,7 @@ test ('describe', () => {
 })
 
 test ('fallback', () => {
-  const flag = createFlag (NAME) (
+  const flag = createOptsFlag (NAME) (
     fallback (FALLBACK),
   )
 
@@ -42,7 +42,7 @@ test ('fallback', () => {
 })
 
 test ('concat', () => {
-  const flag = createFlag (NAME) (
+  const flag = createOptsFlag (NAME) (
     alias (ALIAS),
     describe (DESCRIPTION),
     fallback (FALLBACK),
