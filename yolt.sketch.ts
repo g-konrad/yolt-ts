@@ -1,5 +1,5 @@
-import { command, describe, codec, version, subcommand, arg, action, flag, alias, fallback } from 'yolt/opts'
-import { run } from 'yolt'
+import { command, describe, codec, version, subcommand, arg, action, flag, alias, fallback } from './src/opts'
+import { run } from './src'
 import * as t from 'io-ts'
 
 // explicitly it should be something like this, but...
