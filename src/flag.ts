@@ -1,11 +1,11 @@
-import type { OptsFlag, Transformer } from './types'
+import type { ConfigFlag, Transformer } from './types'
 
 import { concatAll, Semigroup } from 'fp-ts/lib/Semigroup'
 import { none, some } from 'fp-ts/lib/Option'
 
 import { concatStrOption } from './utils'
 
-const concatOptsFlag = (x: OptsFlag) => (y: OptsFlag): OptsFlag =>
+const concatConfigFlag = (x: ConfigFlag) => (y: ConfigFlag): ConfigFlag =>
   ({
     name: y.name,
     alias: concatStrOption (x.alias, y.alias),
@@ -13,40 +13,40 @@ const concatOptsFlag = (x: OptsFlag) => (y: OptsFlag): OptsFlag =>
     fallback: y.fallback,
   })
 
-const flagSemigroup: Semigroup<OptsFlag> =
+const flagSemigroup: Semigroup<ConfigFlag> =
   {
-    concat: (x, y) => concatOptsFlag (x) (y),
+    concat: (x, y) => concatConfigFlag (x) (y),
   }
 
 const { concat } = flagSemigroup
 
-const mergeOptsFlags = concatAll (flagSemigroup)
+const mergeConfigFlags = concatAll (flagSemigroup)
 
-const createOptsFlag = (name: string) => (...ts: ReadonlyArray<Transformer<OptsFlag>>): OptsFlag => {
-  const initialOptsFlag = {
+const createConfigFlag = (name: string) => (...ts: ReadonlyArray<Transformer<ConfigFlag>>): ConfigFlag => {
+  const initialConfigFlag = {
     name: name,
     alias: none,
     description: none,
     fallback: none,
   }
 
-  return mergeOptsFlags (initialOptsFlag) (ts.map ((t): OptsFlag => t (initialOptsFlag)))
+  return mergeConfigFlags (initialConfigFlag) (ts.map ((t): ConfigFlag => t (initialConfigFlag)))
 }
 
-const alias = (alias: string) => (flag: OptsFlag): OptsFlag =>
+const alias = (alias: string) => (flag: ConfigFlag): ConfigFlag =>
   ({
     ...flag,
     alias: some (alias),
   })
 
-const fallback = (value: unknown) => (flag: OptsFlag): OptsFlag =>
+const fallback = (value: unknown) => (flag: ConfigFlag): ConfigFlag =>
   ({
     ...flag,
     fallback: some (value),
   })
 
 export {
-  createOptsFlag,
+  createConfigFlag,
   concat,
   alias,
   fallback,

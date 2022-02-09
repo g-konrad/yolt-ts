@@ -1,4 +1,4 @@
-import { command, describe, codec, version, subcommand, arg, action, flag, alias, fallback } from './src/opts'
+import { command, describe, codec, version, subcommand, arg, action, flag, alias, fallback } from './src/config'
 import { run } from './src'
 import * as t from 'io-ts'
 

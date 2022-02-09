@@ -1,5 +1,5 @@
-import { Opts } from './types'
+import { Config } from './types'
 
-// parseArgs :: Opts -> string[] -> Either<Err, YoltCtx>
-// selectHandler :: Opts -> string[] -> Either<Err, YoltHandler>
+// parseArgs :: Config -> string[] -> Either<Err, YoltCtx>
+// selectHandler :: Config -> string[] -> Either<Err, YoltHandler>
 // YoltHandler = ReaderTaskEither<YoltCtx, Err, void>
