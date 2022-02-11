@@ -1,15 +1,14 @@
-import { Monoid, struct } from 'fp-ts/lib/Monoid'
-import { getMonoid as getReadonlyArrayMonoid, reduceRight } from 'fp-ts/lib/ReadonlyArray'
+import { concatAll, Monoid, struct } from 'fp-ts/lib/Monoid'
+import { getMonoid as getReadonlyArrayMonoid } from 'fp-ts/lib/ReadonlyArray'
 import { Option, some, getMonoid as getOptionMonoid } from 'fp-ts/lib/Option'
 import { last } from 'fp-ts/lib/Semigroup'
-import { getComonad, Traced } from 'fp-ts/lib/Traced'
+import { identity, pipe } from 'fp-ts/lib/function'
 
-/**
- * @category model
- * @since 0.1.0
- */
-interface ConfigArg {
+type Named = {
   readonly name: string
+}
+
+type Describable = {
   readonly description: Option<string>
 }
 
@@ -17,9 +16,13 @@ interface ConfigArg {
  * @category model
  * @since 0.1.0
  */
-interface ConfigFlag {
-  readonly name: string
-  readonly description: Option<string>
+type ConfigArg = Named & Describable
+
+/**
+ * @category model
+ * @since 0.1.0
+ */
+type ConfigFlag = Named & Describable & {
   readonly alias: Option<string>
   readonly fallback: Option<unknown>
 }
@@ -28,9 +31,7 @@ interface ConfigFlag {
  * @category model
  * @since 0.1.0
  */
-interface Settings {
-  readonly name: string
-  readonly description: Option<string>
+type Config = Named & Describable & {
   readonly version: Option<string>
   readonly examples: readonly string[]
   readonly args: readonly ConfigArg[]
@@ -38,28 +39,15 @@ interface Settings {
   readonly subcommands: readonly Config[]
 }
 
-/**
- * @category model
- * @since 0.1.0
- */
-interface Config {
-  readonly description: Option<string>
-  readonly version: Option<string>
-  readonly examples: readonly string[]
-  readonly args: readonly ConfigArg[]
-  readonly flags: readonly ConfigFlag[]
-  readonly subcommands: readonly Config[]
+type Builder<T> = (x: T) => T
+
+const lastStringMonoid: Monoid<string> = {
+  ...last<string> (),
+  empty: '',
 }
 
-/**
- * @category model
- * @since 0.1.0
- */
-type ConfigBuilder = Traced<Config, Settings>
-
-type ConfigBuilderBuilder = (cb: ConfigBuilder) => ConfigBuilder
-
-const monoidConfig: Monoid<Config> = struct<Config> ({
+const configMonoid: Monoid<Config> = struct<Config> ({
+  name: lastStringMonoid,
   version: getOptionMonoid (last ()),
   description: getOptionMonoid (last ()),
   args: getReadonlyArrayMonoid<ConfigArg> (),
@@ -68,56 +56,122 @@ const monoidConfig: Monoid<Config> = struct<Config> ({
   subcommands: getReadonlyArrayMonoid<Config> (),
 })
 
-const C = getComonad<Config> (monoidConfig)
+const configFlagMonoid: Monoid<ConfigFlag> = struct<ConfigFlag> ({
+  name: lastStringMonoid,
+  description: getOptionMonoid (last ()),
+  alias: getOptionMonoid (last ()),
+  fallback: getOptionMonoid (last ()),
+})
 
-const resolveSettings: ((cb: ConfigBuilder) => Settings) = C.extract
+const configArgMonoid: Monoid<ConfigArg> = struct<ConfigArg> ({
+  name: lastStringMonoid,
+  description: getOptionMonoid (last ()),
+})
+
+const getBuilderMonoid = <T>(mn: Monoid<T>): Monoid<Builder<T>> =>
+  ({
+    empty: identity,
+    concat: (x, y) => (config) => mn.concat (x (config), y (config)),
+  })
+
+const configBuilderMonoid: Monoid<Builder<Config>> = getBuilderMonoid (configMonoid)
+
+const configFlagBuilderMonoid: Monoid<Builder<ConfigFlag>> = getBuilderMonoid (configFlagMonoid)
+
+const configArgBuilderMonoid: Monoid<Builder<ConfigArg>> = getBuilderMonoid (configArgMonoid)
+
+const named = <T>(mn: Monoid<T>) => (name: string): T =>
+  ({
+    ...mn.empty,
+    name,
+  })
+
+/**
+ * @category builders
+ * @since 0.1.0
+ */
+export const version = (v: string): Builder<Config> => (config) =>
+  ({
+    ...config,
+    version: some (v),
+  })
+
+/**
+ * @category builders
+ * @since 0.1.0
+ */
+export const describe = <T extends Describable>(desc: string): Builder<T> => (config) =>
+  ({
+    ...config,
+    description: some (desc),
+  })
+
+/**
+ * @category builders
+ * @since 0.1.0
+ */
+export const example = (ex: string): Builder<Config> => (config) =>
+  ({
+    ...config,
+    examples: [ex],
+  })
+
+/**
+ * @category builders
+ * @since 0.1.0
+ */
+export const subcommand = (subconfig: Config): Builder<Config> => (config) =>
+  ({
+    ...config,
+    subcommands: [subconfig],
+  })
+
+/**
+ * @category builders
+ * @since 0.1.0
+ */
+export const alias = (alias: string): Builder<ConfigFlag> => (flag) =>
+  ({
+    ...flag,
+    alias: some (alias),
+  })
+
+/**
+ * @category builders
+ * @since 0.1.0
+ */
+export const fallback = (value: unknown): Builder<ConfigFlag> => (flag) =>
+  ({
+    ...flag,
+    fallback: some (value),
+  })
 
 /**
  * @category constructors
  * @since 0.1.0
  */
-const build = (name: string): ConfigBuilder => (config) =>
-  ({
-    ...config,
-    name,
-  })
-
-export const command = (name: string) => (...bs: readonly ConfigBuilderBuilder[]): Settings =>
-  resolveSettings (
-    reduceRight<ConfigBuilderBuilder, ConfigBuilder> (
-      build (name),
-      (bb, builder) => bb (builder),
-    ) (bs),
+export const command = (name: string) => (...builders: ReadonlyArray<Builder<Config>>): Config =>
+  pipe (
+    named (configMonoid) (name),
+    concatAll (configBuilderMonoid) (builders),
   )
 
-export const version = (v: string) => (wa: ConfigBuilder): ConfigBuilder =>
-  C.extend (wa, (builder) =>
-    builder ({
-      ...monoidConfig.empty,
-      version: some (v),
-    }),
+/**
+ * @category constructors
+ * @since 0.1.0
+ */
+export const flag = (name: string) => (...builders: ReadonlyArray<Builder<ConfigFlag>>): ConfigFlag =>
+  pipe (
+    named (configFlagMonoid) (name),
+    concatAll (configFlagBuilderMonoid) (builders),
   )
 
-export const describe = (desc: string) => (wa: ConfigBuilder): ConfigBuilder =>
-  C.extend (wa, (builder) =>
-    builder ({
-      ...monoidConfig.empty,
-      description: some (desc),
-    }),
-  )
-
-export const example = (ex: string) => (wa: ConfigBuilder): ConfigBuilder =>
-  C.extend (wa, (builder) =>
-    builder ({
-      ...monoidConfig.empty,
-      examples: [ex],
-    }),
-  )
-
-export const subcommand = (subconfig: Config) => (wa: ConfigBuilder): ConfigBuilder =>
-  C.extend (wa, (builder) =>
-    builder ({
-      ...monoidConfig.empty,
-      subcommands: [subconfig],
-    }),
+/**
+ * @category constructors
+ * @since 0.1.0
+ */
+export const arg = (name: string) => (...builders: ReadonlyArray<Builder<ConfigArg>>): ConfigArg =>
+  pipe (
+    named (configArgMonoid) (name),
+    concatAll (configArgBuilderMonoid) (builders),
   )
