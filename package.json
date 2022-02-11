@@ -4,12 +4,13 @@
   "description": "A functional CLI framework where You Only Leverage Types",
   "author": "Gustavo Konrad <g.konrad@outlook.com>",
   "license": "MIT",
+  "homepage": "#",
   "module": "index.js",
   "typings": "index.d.ts",
   "scripts": {
     "test": "jest",
     "test:watch": "jest --watch",
-    "docs": "ts-docs src/index.ts"
+    "docs": "docs-ts"
   },
   "devDependencies": {
     "@types/jest": "^27.4.0",
@@ -24,6 +25,7 @@
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-promise": "^6.0.0",
     "jest": "^27.4.7",
+    "prettier": "^2.5.1",
     "ts-jest": "^27.1.3",
     "ts-node": "^10.4.0",
     "tsutils": "^3.21.0",

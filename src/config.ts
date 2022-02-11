@@ -1,13 +1,24 @@
+/**
+ * @since 0.1.0
+ */
 import { concatAll, Monoid, struct } from 'fp-ts/lib/Monoid'
 import { getMonoid as getReadonlyArrayMonoid } from 'fp-ts/lib/ReadonlyArray'
 import { Option, some, getMonoid as getOptionMonoid } from 'fp-ts/lib/Option'
 import { last } from 'fp-ts/lib/Semigroup'
 import { identity, pipe } from 'fp-ts/lib/function'
 
+/**
+ * @category internal
+ * @since 0.1.0
+ */
 type Named = {
   readonly name: string
 }
 
+/**
+ * @category internal
+ * @since 0.1.0
+ */
 type Describable = {
   readonly description: Option<string>
 }
@@ -39,13 +50,25 @@ type Config = Named & Describable & {
   readonly subcommands: readonly Config[]
 }
 
+/**
+ * @category internal
+ * @since 0.1.0
+ */
 type Builder<T> = (x: T) => T
 
+/**
+ * @category internal
+ * @since 0.1.0
+ */
 const lastStringMonoid: Monoid<string> = {
   ...last<string> (),
   empty: '',
 }
 
+/**
+ * @category internal
+ * @since 0.1.0
+ */
 const configMonoid: Monoid<Config> = struct<Config> ({
   name: lastStringMonoid,
   version: getOptionMonoid (last ()),
@@ -56,6 +79,10 @@ const configMonoid: Monoid<Config> = struct<Config> ({
   subcommands: getReadonlyArrayMonoid<Config> (),
 })
 
+/**
+ * @category internal
+ * @since 0.1.0
+ */
 const configFlagMonoid: Monoid<ConfigFlag> = struct<ConfigFlag> ({
   name: lastStringMonoid,
   description: getOptionMonoid (last ()),
@@ -63,31 +90,55 @@ const configFlagMonoid: Monoid<ConfigFlag> = struct<ConfigFlag> ({
   fallback: getOptionMonoid (last ()),
 })
 
+/**
+ * @category internal
+ * @since 0.1.0
+ */
 const configArgMonoid: Monoid<ConfigArg> = struct<ConfigArg> ({
   name: lastStringMonoid,
   description: getOptionMonoid (last ()),
 })
 
-const getBuilderMonoid = <T>(mn: Monoid<T>): Monoid<Builder<T>> =>
+/**
+ * @category internal
+ * @since 0.1.0
+ */
+const getBuilderMonoid = <T>(m: Monoid<T>): Monoid<Builder<T>> =>
   ({
     empty: identity,
-    concat: (x, y) => (config) => mn.concat (x (config), y (config)),
+    concat: (x, y) => (z) => m.concat (x (z), y (z)),
   })
 
+/**
+ * @category internal
+ * @since 0.1.0
+ */
 const configBuilderMonoid: Monoid<Builder<Config>> = getBuilderMonoid (configMonoid)
 
+/**
+ * @category internal
+ * @since 0.1.0
+ */
 const configFlagBuilderMonoid: Monoid<Builder<ConfigFlag>> = getBuilderMonoid (configFlagMonoid)
 
+/**
+ * @category internal
+ * @since 0.1.0
+ */
 const configArgBuilderMonoid: Monoid<Builder<ConfigArg>> = getBuilderMonoid (configArgMonoid)
 
-const named = <T>(mn: Monoid<T>) => (name: string): T =>
+/**
+ * @category internal
+ * @since 0.1.0
+ */
+const named = <T>(m: Monoid<T>) => (name: string): T =>
   ({
-    ...mn.empty,
+    ...m.empty,
     name,
   })
 
 /**
- * @category builders
+ * @category combinators
  * @since 0.1.0
  */
 export const version = (v: string): Builder<Config> => (config) =>
@@ -97,7 +148,7 @@ export const version = (v: string): Builder<Config> => (config) =>
   })
 
 /**
- * @category builders
+ * @category combinators
  * @since 0.1.0
  */
 export const describe = <T extends Describable>(desc: string): Builder<T> => (config) =>
@@ -107,7 +158,7 @@ export const describe = <T extends Describable>(desc: string): Builder<T> => (co
   })
 
 /**
- * @category builders
+ * @category combinators
  * @since 0.1.0
  */
 export const example = (ex: string): Builder<Config> => (config) =>
@@ -117,7 +168,7 @@ export const example = (ex: string): Builder<Config> => (config) =>
   })
 
 /**
- * @category builders
+ * @category combinators
  * @since 0.1.0
  */
 export const subcommand = (subconfig: Config): Builder<Config> => (config) =>
@@ -127,7 +178,7 @@ export const subcommand = (subconfig: Config): Builder<Config> => (config) =>
   })
 
 /**
- * @category builders
+ * @category combinators
  * @since 0.1.0
  */
 export const alias = (alias: string): Builder<ConfigFlag> => (flag) =>
@@ -137,7 +188,7 @@ export const alias = (alias: string): Builder<ConfigFlag> => (flag) =>
   })
 
 /**
- * @category builders
+ * @category combinators
  * @since 0.1.0
  */
 export const fallback = (value: unknown): Builder<ConfigFlag> => (flag) =>
@@ -147,31 +198,41 @@ export const fallback = (value: unknown): Builder<ConfigFlag> => (flag) =>
   })
 
 /**
+ * @category combinators
+ * @since 0.1.0
+ */
+export const flag = (name: string) => (...combinators: ReadonlyArray<Builder<ConfigFlag>>): Builder<Config> => (config) =>
+  ({
+    ...config,
+    flags: [
+      pipe (
+        named (configFlagMonoid) (name),
+        concatAll (configFlagBuilderMonoid) (combinators),
+      ),
+    ],
+  })
+
+/**
+ * @category combinators
+ * @since 0.1.0
+ */
+export const arg = (name: string) => (...combinators: ReadonlyArray<Builder<ConfigArg>>): Builder<Config> => (config) =>
+  ({
+    ...config,
+    args: [
+      pipe (
+        named (configArgMonoid) (name),
+        concatAll (configArgBuilderMonoid) (combinators),
+      ),
+    ],
+  })
+
+/**
  * @category constructors
  * @since 0.1.0
  */
-export const command = (name: string) => (...builders: ReadonlyArray<Builder<Config>>): Config =>
+export const command = (name: string) => (...combinators: ReadonlyArray<Builder<Config>>): Config =>
   pipe (
     named (configMonoid) (name),
-    concatAll (configBuilderMonoid) (builders),
-  )
-
-/**
- * @category constructors
- * @since 0.1.0
- */
-export const flag = (name: string) => (...builders: ReadonlyArray<Builder<ConfigFlag>>): ConfigFlag =>
-  pipe (
-    named (configFlagMonoid) (name),
-    concatAll (configFlagBuilderMonoid) (builders),
-  )
-
-/**
- * @category constructors
- * @since 0.1.0
- */
-export const arg = (name: string) => (...builders: ReadonlyArray<Builder<ConfigArg>>): ConfigArg =>
-  pipe (
-    named (configArgMonoid) (name),
-    concatAll (configArgBuilderMonoid) (builders),
+    concatAll (configBuilderMonoid) (combinators),
   )
